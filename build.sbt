@@ -5,6 +5,10 @@ version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.11.6"
 
+scalacOptions ++= Seq("-encoding", "utf8")
+scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-Xlint")
+scalacOptions  += "-language:postfixOps"
+
 libraryDependencies += "com.lihaoyi" % "ammonite-repl" % "0.3.2" % "test" cross CrossVersion.full
 
 enablePlugins(PlayScala)

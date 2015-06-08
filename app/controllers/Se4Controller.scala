@@ -131,7 +131,7 @@ object ServiceStatus {
         case _           => JsError(ValidationError("error.expected.url", json.toString))
       }
 
-    private def parseURI(input: String): Option[URI] =
+    private def parseURI(input: String) =
       scala.util.control.Exception.allCatch[URI] opt (new URL(input).toURI)
   }
 

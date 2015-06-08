@@ -1,8 +1,7 @@
 package controllers
 
-import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
-import org.joda.time.{Duration => JodaDuration, Interval, DateTime, DateTimeZone}
-import play.api.libs.json.{ Format, JsResult, JsValue, Json }
+import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration, Interval }
+import play.api.libs.json._
 import play.api.mvc.{ Action, AnyContent, Controller }
 
 import scala.collection.JavaConverters._
@@ -117,13 +116,11 @@ final case class ServiceStatus(
   runbook_url      : String // URI
 )
 object ServiceStatus {
-  implicit val dateTimeFormat = new Format[DateTime] {
-    val isoFormatter = ISODateTimeFormat.dateTime()
-    def writes(o: DateTime): JsValue = Json toJson isoFormatter.print(o)
-    def reads(json: JsValue): JsResult[DateTime] = {
-      json.validate[String] map isoFormatter.parseDateTime
-    }
-  }
+  implicit val dateTimeFormat =
+    Format(
+      Reads  jodaDateReads  "yyyy-MM-dd'T'HH:mm:ss.SSSZZ",
+      Writes jodaDateWrites "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"
+    )
 
   implicit val durationFormat = new Format[JodaDuration] {
     def writes(o: JodaDuration): JsValue =

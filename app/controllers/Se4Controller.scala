@@ -10,39 +10,26 @@ import java.net.JarURLConnection
 import java.util.concurrent.TimeUnit
 
 // TODO: Restrict to return only json
+// TODO: Consider a saner up_duration output ("16890642 milliseconds" is ridiculous)
 class Se4Controller extends Controller {
   def getServiceStatus: Action[AnyContent] = {
-
-    // TODO: inject class?
-    // TODO: handle IO exception
+    // TODO: Make `clazz` injected at construction, & find a better name
     val clazz = getClass
 
     val pathName = clazz.getName.replaceAll("\\.", "/")
-    val attributesOpt =
-      for {
+    val attributes = (
+      (for {
         resourceUrl   <- Option(clazz getResource s"/$pathName.class")
         urlConnection = resourceUrl.openConnection() if urlConnection.isInstanceOf[JarURLConnection]
         jarConnection = urlConnection.asInstanceOf[JarURLConnection]
         manifest     <- Option(jarConnection.getManifest)
       } yield
-      manifest.getMainAttributes.asScala.map(kv => kv._1.toString -> kv._2.toString).toMap
+        manifest.getMainAttributes.asScala.map(kv => kv._1.toString -> kv._2.toString).toMap)
+      getOrElse Map.empty
+      withDefault(_ => "n/a")
+    )
 
-    val attributes = attributesOpt getOrElse Map.empty
-
-    lazy val version: String =
-      (attributes
-        get "Version"
-        map (ver =>
-          attributes
-            get "Build-Number"
-            filter (_.nonEmpty)
-            map (bn => ver.replace("SNAPSHOT", bn))
-            getOrElse ver
-          )
-        getOrElse "n/a"
-      )
-
-    val osMBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean
+    val      osMBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean
     val runTimeMBean = java.lang.management.ManagementFactory.getRuntimeMXBean
 
     val hostName    = java.net.InetAddress.getLocalHost.getHostName
@@ -51,34 +38,35 @@ class Se4Controller extends Controller {
     val currentDateTime = DateTime now DateTimeZone.UTC
     val upSince = new DateTime(runTimeMBean.getStartTime, DateTimeZone.UTC)
 
-    val serviceStatus = ServiceStatus(
-      group_id         = attributes.get("Group-Id") getOrElse "n/a",
-      artifact_id      = attributes.get("Artifact-Id") getOrElse "n/a",
-      version          = version,
-      git_sha1         = attributes.get("Git-SHA1") getOrElse "n/a",
+    val serviceStatus =
+      ServiceStatus(
+        group_id         = attributes("Group-Id"),
+        artifact_id      = attributes("Artifact-Id"),
+        version          = attributes("Version"),
+        git_sha1         = attributes("Git-SHA1"),
 
-      built_by         = attributes.get("Built-By") getOrElse "n/a",
-      build_number     = attributes.get("Build-Number") getOrElse "n/a",
-      build_machine    = attributes.get("Build-Machine") getOrElse "n/a",
-      built_when       = attributes.get("Built-When") getOrElse "n/a",
-      compiler_version = attributes.get("Build-Jdk") getOrElse "n/a",
+        built_by         = attributes("Built-By"),
+        build_number     = attributes("Build-Number"),
+        build_machine    = attributes("Build-Machine"),
+        built_when       = attributes("Built-When"),
+        compiler_version = attributes("Build-Jdk"),
 
-      machine_name     = s"$hostName ($hostAddress)",
-      current_time     = currentDateTime,
-      up_since         = upSince,
-      up_duration      = new Interval(upSince, currentDateTime).toDuration,
+        machine_name     = s"$hostName ($hostAddress)",
+        current_time     = currentDateTime,
+        up_since         = upSince,
+        up_duration      = new JodaDuration(upSince, currentDateTime),
 
-      os_arch          = osMBean.getArch,
-      os_numprocessors = Option(osMBean.getAvailableProcessors.toString),
-      os_name          = osMBean.getName,
-      os_version       = osMBean.getVersion,
-      os_avgload       = Option(osMBean.getSystemLoadAverage.toString),
+        os_arch          = osMBean.getArch,
+        os_numprocessors = osMBean.getAvailableProcessors.toString,
+        os_name          = osMBean.getName,
+        os_version       = osMBean.getVersion,
+        os_avgload       = osMBean.getSystemLoadAverage.toString,
 
-      vm_name          = runTimeMBean.getVmName,
-      vm_vendor        = runTimeMBean.getVmVendor,
-      vm_version       = runTimeMBean.getVmVersion,
-      runbook_url      = "" //new URI("http://google.com")
-    )
+        vm_name          = runTimeMBean.getVmName,
+        vm_vendor        = runTimeMBean.getVmVendor,
+        vm_version       = runTimeMBean.getVmVersion,
+        runbook_url      = "" //new URI("http://google.com")
+      )
 
     Action(Ok(Json toJson serviceStatus))
   }
@@ -105,10 +93,10 @@ final case class ServiceStatus(
   up_duration      : JodaDuration,
 
   os_arch          : String,
-  os_numprocessors : Option[String],
+  os_numprocessors : String,
   os_name          : String,
   os_version       : String,
-  os_avgload       : Option[String],
+  os_avgload       : String,
 
   vm_name          : String,
   vm_vendor        : String,

@@ -43,11 +43,14 @@ class Se4Controller extends Controller {
         getOrElse "n/a"
       )
 
-    def mavenArtifactVersion = version
-    def extendedVersion      = attributes.get("Extended-Version")
-
     val osMBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean
     val runTimeMBean = java.lang.management.ManagementFactory.getRuntimeMXBean
+
+    val hostName    = java.net.InetAddress.getLocalHost.getHostName
+    val hostAddress = java.net.InetAddress.getLocalHost.getHostAddress
+
+    val currentDateTime = DateTime now DateTimeZone.UTC
+    val upSince = new DateTime(runTimeMBean.getStartTime, DateTimeZone.UTC)
 
     val serviceStatus = ServiceStatus(
       group_id         = attributes.get("Group-Id") getOrElse "n/a",
@@ -61,10 +64,10 @@ class Se4Controller extends Controller {
       built_when       = attributes.get("Built-When") getOrElse "n/a",
       compiler_version = attributes.get("Build-Jdk") getOrElse "n/a",
 
-      machine_name     = "",
-      current_time     = DateTime now DateTimeZone.UTC,
-      up_since         = DateTime now DateTimeZone.UTC, // TODO fix
-      up_duration      = JodaDuration.standardDays(1), // TODO fix
+      machine_name     = s"$hostName ($hostAddress)",
+      current_time     = currentDateTime,
+      up_since         = upSince,
+      up_duration      = new Interval(upSince, currentDateTime).toDuration,
 
       os_arch          = osMBean.getArch,
       os_numprocessors = Option(osMBean.getAvailableProcessors.toString),

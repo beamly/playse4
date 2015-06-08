@@ -1,2 +1,9 @@
-GET  /             controllers.Application.index
-GET  /assets/*file controllers.Assets.versioned(path="/public", file: Asset)
+GET        /                               controllers.Application.index
+
+GET        /service/status                 controllers.Se4Controller.getServiceStatus
+GET        /service/healthcheck            controllers.Se4Controller.getServiceHealthcheck
+GET        /service/healthcheck/gtg        controllers.Se4Controller.getServiceGtg
+
+# GET        /service/config                 controllers.Se4Controller.getServiceConfig
+
+GET        /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)

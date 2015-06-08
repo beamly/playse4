@@ -1,6 +1,6 @@
 package controllers
 
-import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration, Interval }
+import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration }
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.mvc.{ Action, AnyContent, Controller }
@@ -71,6 +71,7 @@ class Se4Controller extends Controller {
 
     Action(Ok(Json toJson serviceStatus))
   }
+
   def getServiceHealthcheck = Action(Ok(views.html.index("Your new application is ready.")))
   def getServiceGtg         = Action(Ok(views.html.index("Your new application is ready.")))
 }
@@ -112,27 +113,26 @@ object ServiceStatus {
     )
 
   implicit val durationFormat = new Format[JodaDuration] {
-    def writes(o: JodaDuration): JsValue =
-      Json toJson Duration(o.getMillis, TimeUnit.MILLISECONDS).toString
+    def writes(d: JodaDuration): JsValue =
+      Json toJson Duration(d.getMillis, TimeUnit.MILLISECONDS).toString
 
     def reads(json: JsValue): JsResult[JodaDuration] =
       json.validate[String] map (Duration(_)) map (_.toMillis) map JodaDuration.millis
   }
 
   implicit val urlFormat = new Format[URI] {
-    def writes(o: URI): JsValue = Json toJson o.toString
+    def writes(uri: URI): JsValue = Json toJson uri.toString
 
     def reads(json: JsValue): JsResult[URI] =
       json match {
         case JsString(s) => parseURI(s) match {
-          case Some(url) => JsSuccess(url)
+          case Some(uri) => JsSuccess(uri)
           case None      => JsError(ValidationError("error.expected.url.format", s))
         }
         case _           => JsError(ValidationError("error.expected.url", json.toString))
       }
 
-    private def parseURI(input: String) =
-      scala.util.control.Exception.allCatch[URI] opt (new URL(input).toURI)
+    private def parseURI(s: String) = scala.util.control.Exception.allCatch[URI] opt new URL(s).toURI
   }
 
   implicit val jsonFormat: Format[ServiceStatus] = Json.format[ServiceStatus]

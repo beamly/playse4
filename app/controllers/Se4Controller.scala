@@ -119,7 +119,7 @@ object ServiceStatus {
       json.validate[String] map (Duration(_)) map (_.toMillis) map JodaDuration.millis
   }
 
-  implicit val runbookUrlFormat = new Format[URI] {
+  implicit val urlFormat = new Format[URI] {
     def writes(o: URI): JsValue = Json toJson o.toString
 
     def reads(json: JsValue): JsResult[URI] =

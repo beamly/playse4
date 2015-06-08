@@ -1,12 +1,13 @@
 package controllers
 
 import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration, Interval }
+import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.mvc.{ Action, AnyContent, Controller }
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-import java.net.JarURLConnection
+import java.net.{URI, URL, JarURLConnection}
 import java.util.concurrent.TimeUnit
 
 // TODO: Restrict to return only json
@@ -65,8 +66,8 @@ class Se4Controller extends Controller {
         vm_name          = runTimeMBean.getVmName,
         vm_vendor        = runTimeMBean.getVmVendor,
         vm_version       = runTimeMBean.getVmVersion,
-        runbook_url      = "" //new URI("http://google.com")
-      )
+        runbook_url      = new URI("http://google.com")
+    )
 
     Action(Ok(Json toJson serviceStatus))
   }
@@ -101,7 +102,7 @@ final case class ServiceStatus(
   vm_name          : String,
   vm_vendor        : String,
   vm_version       : String,
-  runbook_url      : String // URI
+  runbook_url      : URI
 )
 object ServiceStatus {
   implicit val dateTimeFormat =
@@ -117,5 +118,22 @@ object ServiceStatus {
     def reads(json: JsValue): JsResult[JodaDuration] =
       json.validate[String] map (Duration(_)) map (_.toMillis) map JodaDuration.millis
   }
+
+  implicit val urlFormat = new Format[URI] {
+    def writes(o: URI): JsValue = Json toJson o.toString
+
+    def reads(json: JsValue): JsResult[URI] =
+      json match {
+        case JsString(s) => parseURI(s) match {
+          case Some(url) => JsSuccess(url)
+          case None      => JsError(ValidationError("error.expected.url.format", s))
+        }
+        case _           => JsError(ValidationError("error.expected.url", json.toString))
+      }
+
+    private def parseURI(input: String) =
+      scala.util.control.Exception.allCatch[URI] opt (new URL(input).toURI)
+  }
+
   implicit val jsonFormat: Format[ServiceStatus] = Json.format[ServiceStatus]
 }

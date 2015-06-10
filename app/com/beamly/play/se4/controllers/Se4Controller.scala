@@ -1,12 +1,12 @@
 package com.beamly.play.se4.controllers
 
-import akka.actor.Cancellable
-import com.beamly.play.se4.{JarManifest, ServiceStatusData}
+import akka.actor.{ActorSystem, Cancellable}
 import com.beamly.play.se4.healthcheck.{HealthCheck, TestPassed}
 import com.beamly.play.se4.healthchecks.HealthcheckResponse
+import com.beamly.play.se4.{JarManifest, ServiceStatusData}
 import org.joda.time.{DateTime, DateTimeZone, Duration => JodaDuration}
 import play.Logger
-import play.api.libs.concurrent.Akka
+import play.api.inject.ApplicationLifecycle
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Controller}
@@ -17,9 +17,12 @@ import java.net.URI
 
 // TODO: Restrict to return only json
 // TODO: Consider/trial moving to com.beamly.play.se4
-class Se4Controller(healthchecks: Iterable[HealthCheck]) extends Controller {
+class Se4Controller(healthchecks: Iterable[HealthCheck], applicationLifecycle: ApplicationLifecycle)(implicit actorSystem: ActorSystem) extends Controller {
 
   scheduleHealthChecks()
+  applicationLifecycle.addStopHook { () =>
+    Future(unscheduleHealthChecks())
+  }
 
   def getServiceStatus: Action[AnyContent] = {
     // TODO: Make `clazz` injected at construction, & find a better name - anyServiceClass
@@ -87,10 +90,10 @@ class Se4Controller(healthchecks: Iterable[HealthCheck]) extends Controller {
 
   private var scheduledTests = Iterable.empty[Cancellable]
 
-  private def scheduleHealthChecks()(implicit app: play.api.Application) {
+  private def scheduleHealthChecks() {
     scheduledTests = healthchecks map { healthCheck =>
-      Akka.system.scheduler.schedule(Duration.Zero, healthCheck.testInterval) {
-        healthCheck.invokeTest()(Akka.system)
+      actorSystem.scheduler.schedule(Duration.Zero, healthCheck.testInterval) {
+        healthCheck.invokeTest()
         healthCheck.latestResult map { result =>
           if (result.status == TestPassed) {
             Logger.debug( "HealthCheck [{}] {}", result.name, result.status)
@@ -102,7 +105,7 @@ class Se4Controller(healthchecks: Iterable[HealthCheck]) extends Controller {
     }
   }
 
-  def unscheduleHealthChecks() {
+  private def unscheduleHealthChecks() {
     scheduledTests foreach (_.cancel())
     scheduledTests = Iterable.empty
   }

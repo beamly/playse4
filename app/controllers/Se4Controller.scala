@@ -1,26 +1,24 @@
 package controllers
 
+import com.beamly.play.se4.ServiceStatusData
 import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration }
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.mvc.{ Action, AnyContent, Controller }
 
 import scala.collection.JavaConverters._
-import scala.concurrent.duration._
-import java.net.{URI, URL, JarURLConnection}
-import java.util.concurrent.TimeUnit
+import java.net.{ JarURLConnection, URI }
 
 // TODO: Restrict to return only json
-// TODO: Consider a saner up_duration output ("16890642 milliseconds" is ridiculous)
+// TODO: Consider/trial moving to com.beamly.play.se4
 class Se4Controller extends Controller {
   def getServiceStatus: Action[AnyContent] = {
-    // TODO: Make `clazz` injected at construction, & find a better name
+    // TODO: Make `clazz` injected at construction, & find a better name - anyServiceClass
     val clazz = getClass
 
     val pathName = clazz.getName.replaceAll("\\.", "/")
     val attributes = (
       (for {
-        resourceUrl   <- Option(clazz getResource s"/$pathName.class")
+        resourceUrl  <- Option(clazz getResource s"/$pathName.class")
         urlConnection = resourceUrl.openConnection() if urlConnection.isInstanceOf[JarURLConnection]
         jarConnection = urlConnection.asInstanceOf[JarURLConnection]
         manifest     <- Option(jarConnection.getManifest)
@@ -39,8 +37,8 @@ class Se4Controller extends Controller {
     val currentDateTime = DateTime now DateTimeZone.UTC
     val upSince = new DateTime(runTimeMBean.getStartTime, DateTimeZone.UTC)
 
-    val serviceStatus =
-      ServiceStatus(
+    val serviceStatusData =
+      ServiceStatusData(
         group_id         = attributes("Group-Id"),
         artifact_id      = attributes("Artifact-Id"),
         version          = attributes("Version"),
@@ -69,7 +67,7 @@ class Se4Controller extends Controller {
         runbook_url      = new URI("http://google.com")
     )
 
-    Action(Ok(Json toJson serviceStatus))
+    Action(Ok(Json toJson serviceStatusData))
   }
 
 
@@ -91,65 +89,4 @@ class Se4Controller extends Controller {
 
 
   def getServiceConfig      = Action(Ok("TODO"))
-}
-
-final case class ServiceStatus(
-  group_id         : String,
-  artifact_id      : String,
-  version          : String,
-  git_sha1         : String,
-
-  built_by         : String,
-  build_number     : String,
-  build_machine    : String,
-  built_when       : String,
-  compiler_version : String,
-
-  machine_name     : String,
-  current_time     : DateTime,
-  up_since         : DateTime,
-  up_duration      : JodaDuration,
-
-  os_arch          : String,
-  os_numprocessors : String,
-  os_name          : String,
-  os_version       : String,
-  os_avgload       : String,
-
-  vm_name          : String,
-  vm_vendor        : String,
-  vm_version       : String,
-  runbook_url      : URI
-)
-object ServiceStatus {
-  implicit val dateTimeFormat =
-    Format(
-      Reads  jodaDateReads  "yyyy-MM-dd'T'HH:mm:ss.SSSZZ",
-      Writes jodaDateWrites "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"
-    )
-
-  implicit val durationFormat = new Format[JodaDuration] {
-    def writes(d: JodaDuration): JsValue =
-      Json toJson Duration(d.getMillis, TimeUnit.MILLISECONDS).toString
-
-    def reads(json: JsValue): JsResult[JodaDuration] =
-      json.validate[String] map (Duration(_)) map (_.toMillis) map JodaDuration.millis
-  }
-
-  implicit val urlFormat = new Format[URI] {
-    def writes(uri: URI): JsValue = Json toJson uri.toString
-
-    def reads(json: JsValue): JsResult[URI] =
-      json match {
-        case JsString(s) => parseURI(s) match {
-          case Some(uri) => JsSuccess(uri)
-          case None      => JsError(ValidationError("error.expected.url.format", s))
-        }
-        case _           => JsError(ValidationError("error.expected.url", json.toString))
-      }
-
-    private def parseURI(s: String) = scala.util.control.Exception.allCatch[URI] opt new URL(s).toURI
-  }
-
-  implicit val jsonFormat: Format[ServiceStatus] = Json.format[ServiceStatus]
 }

@@ -18,6 +18,9 @@ import java.net.URI
 // TODO: Restrict to return only json
 // TODO: Consider/trial moving to com.beamly.play.se4
 class Se4Controller(healthchecks: Iterable[HealthCheck]) extends Controller {
+
+  scheduleHealthChecks()
+
   def getServiceStatus: Action[AnyContent] = {
     // TODO: Make `clazz` injected at construction, & find a better name - anyServiceClass
     val clazz = getClass
@@ -84,7 +87,7 @@ class Se4Controller(healthchecks: Iterable[HealthCheck]) extends Controller {
 
   private var scheduledTests = Iterable.empty[Cancellable]
 
-  def scheduleHealthChecks()(implicit app: play.api.Application) {
+  private def scheduleHealthChecks()(implicit app: play.api.Application) {
     scheduledTests = healthchecks map { healthCheck =>
       Akka.system.scheduler.schedule(Duration.Zero, healthCheck.testInterval) {
         healthCheck.invokeTest()(Akka.system)

@@ -72,11 +72,27 @@ class Se4Controller extends Controller {
     Action(Ok(Json toJson serviceStatus))
   }
 
-  def getServiceHealthcheck = Action(Ok(views.html.index("Your new application is ready.")))
-  def getServiceGtg         = Action(Ok(views.html.index("Your new application is ready.")))
+
+
+
+
+  def getServiceGtg         = Action(Ok("TODO"))
+  def getServiceHealthcheck = Action(Ok("TODO"))
+
+
+
+
+
+  def getServiceMetrics     = Action(Ok("TODO"))
+  def getServiceTwoMetrics  = Action(Ok("TODO"))
+
+
+
+
+
+  def getServiceConfig      = Action(Ok("TODO"))
 }
 
-// TODO: Ask Glen about below being of type float instead of string
 final case class ServiceStatus(
   group_id         : String,
   artifact_id      : String,

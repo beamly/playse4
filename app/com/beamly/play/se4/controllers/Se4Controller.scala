@@ -21,7 +21,7 @@ class Se4Controller(healthchecks: Iterable[HealthCheck], applicationLifecycle: A
 
   scheduleHealthChecks()
   applicationLifecycle.addStopHook { () =>
-    Future(unscheduleHealthChecks())
+    Future.successful(unscheduleHealthChecks())
   }
 
   def getServiceStatus: Action[AnyContent] = {

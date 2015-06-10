@@ -1,8 +1,8 @@
-GET        /service/status                 controllers.Se4Controller.getServiceStatus
-GET        /service/healthcheck/gtg        controllers.Se4Controller.getServiceGtg
-GET        /service/healthcheck            controllers.Se4Controller.getServiceHealthcheck
-GET        /service/metrics                controllers.Se4Controller.getServiceMetrics
-GET        /service/2/metrics              controllers.Se4Controller.getServiceTwoMetrics
-GET        /service/config                 controllers.Se4Controller.getServiceConfig
+GET        /service/status                 com.beamly.play.se4.controllers.Se4Controller.getServiceStatus
+GET        /service/healthcheck/gtg        com.beamly.play.se4.controllers.Se4Controller.getServiceGtg
+GET        /service/healthcheck            com.beamly.play.se4.controllers.Se4Controller.getServiceHealthcheck
+GET        /service/metrics                com.beamly.play.se4.controllers.Se4Controller.getServiceMetrics
+GET        /service/2/metrics              com.beamly.play.se4.controllers.Se4Controller.getServiceTwoMetrics
+GET        /service/config                 com.beamly.play.se4.controllers.Se4Controller.getServiceConfig
 
 GET        /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)

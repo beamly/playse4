@@ -1,15 +1,29 @@
-package controllers
+package com.beamly.play.se4.controllers
 
-import com.beamly.play.se4.{ JarManifest, ServiceStatusData }
-import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration }
+import akka.actor.{ActorSystem, Cancellable}
+import com.beamly.play.se4.healthcheck.{HealthCheck, TestPassed}
+import com.beamly.play.se4.healthchecks.HealthcheckResponse
+import com.beamly.play.se4.{JarManifest, ServiceStatusData}
+import org.joda.time.{DateTime, DateTimeZone, Duration => JodaDuration}
+import play.Logger
+import play.api.inject.ApplicationLifecycle
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
-import play.api.mvc.{ Action, AnyContent, Controller }
+import play.api.mvc.{Action, AnyContent, Controller}
 
+import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 import java.net.URI
 
 // TODO: Restrict to return only json
 // TODO: Consider/trial moving to com.beamly.play.se4
-class Se4Controller extends Controller {
+class Se4Controller(healthchecks: Iterable[HealthCheck], applicationLifecycle: ApplicationLifecycle)(implicit actorSystem: ActorSystem) extends Controller {
+
+  scheduleHealthChecks()
+  applicationLifecycle.addStopHook { () =>
+    Future(unscheduleHealthChecks())
+  }
+
   def getServiceStatus: Action[AnyContent] = {
     // TODO: Make `clazz` injected at construction, & find a better name - anyServiceClass
     val clazz = getClass
@@ -58,16 +72,43 @@ class Se4Controller extends Controller {
     Action(Ok(Json toJson serviceStatusData))
   }
 
+  def getServiceGtg = Action async {
+    healthchecks.foldLeft(Future successful true) { (soFar, test) =>
+      test.gtgPassed flatMap (gtgPassed => soFar map (_ && gtgPassed))
+    } map {
+      case true  => Ok("\"OK\"")
+      case false => InternalServerError("\"FAILED\"")
+    }
+  }
 
+  def getServiceHealthcheck = Action async {
+    Future.traverse(healthchecks)(_.latestResult) map { testResults =>
+      val healthCheck = HealthcheckResponse.factory(DateTime.now(), "0 seconds", testResults)
+      Ok(Json.toJson(healthCheck))
+    }
+  }
 
+  private var scheduledTests = Iterable.empty[Cancellable]
 
+  private def scheduleHealthChecks() {
+    scheduledTests = healthchecks map { healthCheck =>
+      actorSystem.scheduler.schedule(Duration.Zero, healthCheck.testInterval) {
+        healthCheck.invokeTest()
+        healthCheck.latestResult map { result =>
+          if (result.status == TestPassed) {
+            Logger.debug( "HealthCheck [{}] {}", result.name, result.status)
+          } else {
+            Logger.info( "HealthCheck [{}] {}", result.name,  result.status)
+          }
+        }
+      }
+    }
+  }
 
-  def getServiceGtg         = Action(Ok("TODO"))
-  def getServiceHealthcheck = Action(Ok("TODO"))
-
-
-
-
+  private def unscheduleHealthChecks() {
+    scheduledTests foreach (_.cancel())
+    scheduledTests = Iterable.empty
+  }
 
   def getServiceMetrics     = Action(Ok("TODO"))
   def getServiceTwoMetrics  = Action(Ok("TODO"))

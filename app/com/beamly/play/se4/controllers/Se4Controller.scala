@@ -84,7 +84,7 @@ class Se4Controller(healthchecks: Iterable[HealthCheck]) extends Controller {
 
   private var scheduledTests = Iterable.empty[Cancellable]
 
-  private def scheduleHealthChecks()(implicit app: play.api.Application) {
+  def scheduleHealthChecks()(implicit app: play.api.Application) {
     scheduledTests = healthchecks map { healthCheck =>
       Akka.system.scheduler.schedule(Duration.Zero, healthCheck.testInterval) {
         healthCheck.invokeTest()(Akka.system)
@@ -97,6 +97,11 @@ class Se4Controller(healthchecks: Iterable[HealthCheck]) extends Controller {
         }
       }
     }
+  }
+
+  def unscheduleHealthChecks() {
+    scheduledTests foreach (_.cancel())
+    scheduledTests = Iterable.empty
   }
 
   def getServiceMetrics     = Action(Ok("TODO"))

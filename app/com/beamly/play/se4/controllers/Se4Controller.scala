@@ -1,4 +1,4 @@
-package controllers
+package com.beamly.play.se4.controllers
 
 import com.beamly.play.se4.{ JarManifest, ServiceStatusData }
 import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration }
@@ -63,7 +63,9 @@ class Se4Controller extends Controller {
 
 
   def getServiceGtg         = Action(Ok("TODO"))
-  def getServiceHealthcheck = Action(Ok("TODO"))
+  def getServiceHealthcheck = {
+    Action(Ok("TODO"))
+  }
 
 
 

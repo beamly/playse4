@@ -1,12 +1,11 @@
 package controllers
 
-import com.beamly.play.se4.ServiceStatusData
+import com.beamly.play.se4.{ JarManifest, ServiceStatusData }
 import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration }
 import play.api.libs.json._
 import play.api.mvc.{ Action, AnyContent, Controller }
 
-import scala.collection.JavaConverters._
-import java.net.{ JarURLConnection, URI }
+import java.net.URI
 
 // TODO: Restrict to return only json
 // TODO: Consider/trial moving to com.beamly.play.se4
@@ -15,18 +14,7 @@ class Se4Controller extends Controller {
     // TODO: Make `clazz` injected at construction, & find a better name - anyServiceClass
     val clazz = getClass
 
-    val pathName = clazz.getName.replaceAll("\\.", "/")
-    val attributes = (
-      (for {
-        resourceUrl  <- Option(clazz getResource s"/$pathName.class")
-        urlConnection = resourceUrl.openConnection() if urlConnection.isInstanceOf[JarURLConnection]
-        jarConnection = urlConnection.asInstanceOf[JarURLConnection]
-        manifest     <- Option(jarConnection.getManifest)
-      } yield
-        manifest.getMainAttributes.asScala.map(kv => kv._1.toString -> kv._2.toString).toMap)
-      getOrElse Map.empty
-      withDefault(_ => "n/a")
-    )
+    val manifest = JarManifest fromClass clazz getOrElse Map.empty withDefault(_ => "n/a")
 
     val      osMBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean
     val runTimeMBean = java.lang.management.ManagementFactory.getRuntimeMXBean
@@ -39,16 +27,16 @@ class Se4Controller extends Controller {
 
     val serviceStatusData =
       ServiceStatusData(
-        group_id         = attributes("Group-Id"),
-        artifact_id      = attributes("Artifact-Id"),
-        version          = attributes("Version"),
-        git_sha1         = attributes("Git-SHA1"),
+        group_id         = manifest("Group-Id"),
+        artifact_id      = manifest("Artifact-Id"),
+        version          = manifest("Version"),
+        git_sha1         = manifest("Git-SHA1"),
 
-        built_by         = attributes("Built-By"),
-        build_number     = attributes("Build-Number"),
-        build_machine    = attributes("Build-Machine"),
-        built_when       = attributes("Built-When"),
-        compiler_version = attributes("Build-Jdk"),
+        built_by         = manifest("Built-By"),
+        build_number     = manifest("Build-Number"),
+        build_machine    = manifest("Build-Machine"),
+        built_when       = manifest("Built-When"),
+        compiler_version = manifest("Build-Jdk"),
 
         machine_name     = s"$hostName ($hostAddress)",
         current_time     = currentDateTime,

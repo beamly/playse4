@@ -1,5 +1,7 @@
 package com.beamly.play.se4
 
-object PlayJsonAllInstances
+trait PlayJsonAllInstances
   extends PlayJsonJavaInstances
      with PlayJsonJodaTimeInstances
+
+object PlayJsonAllInstances extends PlayJsonAllInstances

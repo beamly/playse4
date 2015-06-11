@@ -1,11 +1,12 @@
 package com.beamly.play.se4
+package status
 
 import org.joda.time.{ DateTime, Duration => JodaDuration }
 import play.api.libs.json._
 
 import java.net.URI
 
-final case class ServiceStatusData(
+final case class Se4StatusResponse(
   group_id         : String,
   artifact_id      : String,
   version          : String,
@@ -34,7 +35,6 @@ final case class ServiceStatusData(
   runbook_url      : URI
 )
 
-object ServiceStatusData {
-  import PlayJsonAllInstances._
-  implicit val jsonFormat: Format[ServiceStatusData] = Json.format[ServiceStatusData]
+object Se4StatusResponse {
+  implicit val jsonFormat: Format[Se4StatusResponse] = Json.format[Se4StatusResponse]
 }

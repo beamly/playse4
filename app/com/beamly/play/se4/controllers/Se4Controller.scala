@@ -1,34 +1,58 @@
-package com.beamly.play.se4.controllers
+package com.beamly.play.se4
+package controllers
 
-import akka.actor.{ActorSystem, Cancellable}
-import com.beamly.play.se4.healthcheck.{HealthCheck, TestPassed}
-import com.beamly.play.se4.healthchecks.HealthcheckResponse
-import com.beamly.play.se4.{JarManifest, ServiceStatusData}
-import org.joda.time.{DateTime, DateTimeZone, Duration => JodaDuration}
+import akka.actor.{ ActorSystem, Cancellable }
+import com.beamly.play.se4.healthchecks.{ HealthCheck, HealthcheckResponse, TestPassed }
+import com.beamly.play.se4.metrics.{ CounterV1, MetricsResponseV1, MetricsResponseV2, MetricsStore }
+import com.beamly.play.se4.status.Se4StatusResponse
+import com.beamly.play.se4.utils.JarManifest
+import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration }
 import play.Logger
 import play.api.inject.ApplicationLifecycle
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, Controller}
+import play.api.mvc.{ Action, AnyContent, Controller }
 
+import scala.collection.JavaConverters._
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
-import java.net.URI
+import scala.concurrent.duration._
 
 // TODO: Restrict to return only json
-// TODO: Consider/trial moving to com.beamly.play.se4
-class Se4Controller(healthchecks: Iterable[HealthCheck], applicationLifecycle: ApplicationLifecycle)(implicit actorSystem: ActorSystem) extends Controller {
+class Se4Controller(
+  aServiceClass : Class[_],
+  runbookUrl    : RunbookUrl,
+  metricsStore  : MetricsStore,
+  healthchecks: Iterable[HealthCheck]
+)(implicit actorSystem: ActorSystem, applicationLifecycle: ApplicationLifecycle) extends Controller {
+
+  import actorSystem.dispatcher
 
   scheduleHealthChecks()
-  applicationLifecycle.addStopHook { () =>
-    Future.successful(unscheduleHealthChecks())
+  applicationLifecycle addStopHook (() => Future successful unscheduleHealthChecks())
+
+  private var scheduledTests = Iterable.empty[Cancellable]
+
+  private def scheduleHealthChecks() {
+    scheduledTests = healthchecks map { healthCheck =>
+      actorSystem.scheduler.schedule(Duration.Zero, healthCheck.testInterval) {
+        healthCheck.invokeTest()
+        healthCheck.latestResult map { result =>
+          import result._
+          if (status == TestPassed)
+            Logger debug s"HealthCheck [$name}}] $status"
+          else
+            Logger info s"HealthCheck [$name] $status"
+        }
+      }
+    }
+  }
+
+  private def unscheduleHealthChecks(): Unit = {
+    scheduledTests foreach (_.cancel())
+    scheduledTests = Iterable.empty
   }
 
   def getServiceStatus: Action[AnyContent] = {
-    // TODO: Make `clazz` injected at construction, & find a better name - anyServiceClass
-    val clazz = getClass
-
-    val manifest = JarManifest fromClass clazz getOrElse Map.empty withDefault(_ => "n/a")
+    val manifest = JarManifest fromClass aServiceClass getOrElse Map.empty withDefault(_ => "n/a")
 
     val      osMBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean
     val runTimeMBean = java.lang.management.ManagementFactory.getRuntimeMXBean
@@ -40,7 +64,7 @@ class Se4Controller(healthchecks: Iterable[HealthCheck], applicationLifecycle: A
     val upSince = new DateTime(runTimeMBean.getStartTime, DateTimeZone.UTC)
 
     val serviceStatusData =
-      ServiceStatusData(
+      Se4StatusResponse(
         group_id         = manifest("Group-Id"),
         artifact_id      = manifest("Artifact-Id"),
         version          = manifest("Version"),
@@ -66,56 +90,56 @@ class Se4Controller(healthchecks: Iterable[HealthCheck], applicationLifecycle: A
         vm_name          = runTimeMBean.getVmName,
         vm_vendor        = runTimeMBean.getVmVendor,
         vm_version       = runTimeMBean.getVmVersion,
-        runbook_url      = new URI("http://google.com")
+        runbook_url      = runbookUrl.value
     )
 
     Action(Ok(Json toJson serviceStatusData))
   }
 
-  def getServiceGtg = Action async {
-    healthchecks.foldLeft(Future successful true) { (soFar, test) =>
-      test.gtgPassed flatMap (gtgPassed => soFar map (_ && gtgPassed))
-    } map {
-      case true  => Ok("\"OK\"")
-      case false => InternalServerError("\"FAILED\"")
-    }
-  }
-
-  def getServiceHealthcheck = Action async {
-    Future.traverse(healthchecks)(_.latestResult) map { testResults =>
-      val healthCheck = HealthcheckResponse.factory(DateTime.now(), "0 seconds", testResults)
-      Ok(Json.toJson(healthCheck))
-    }
-  }
-
-  private var scheduledTests = Iterable.empty[Cancellable]
-
-  private def scheduleHealthChecks() {
-    scheduledTests = healthchecks map { healthCheck =>
-      actorSystem.scheduler.schedule(Duration.Zero, healthCheck.testInterval) {
-        healthCheck.invokeTest()
-        healthCheck.latestResult map { result =>
-          if (result.status == TestPassed) {
-            Logger.debug( "HealthCheck [{}] {}", result.name, result.status)
-          } else {
-            Logger.info( "HealthCheck [{}] {}", result.name,  result.status)
-          }
+  def getServiceHealthcheckGtg =
+    Action.async(
+      healthchecks
+        .foldLeft(Future successful true) { (accGtgFuture, healthCheck) =>
+          healthCheck.gtgPassed flatMap (healthCheckGtg => accGtgFuture map (accGtg => accGtg && healthCheckGtg))
         }
-      }
-    }
+        .map {
+          case true  => Ok("\"OK\"")
+          case false => InternalServerError("\"FAILED\"")
+        }
+    )
+
+  def getServiceHealthcheck =
+    Action.async(
+      Future.traverse(healthchecks)(_.latestResult)
+        map (results => Ok(Json toJson HealthcheckResponse.create("0 seconds", results)))
+    )
+
+  def getServiceMetricsV1 =
+    Action.async(
+      getServiceMetricsData()
+        .map(data => data map (kv => kv._1 -> CounterV1(kv._1, "counter", kv._2)))
+        .map(data => Ok(Json toJson MetricsResponseV1(DateTime now DateTimeZone.UTC, data.toMap)))
+    )
+
+  def getServiceMetricsV2 =
+    Action.async(
+      getServiceMetricsData()
+        .map(data => Ok(Json toJson MetricsResponseV2(DateTime now DateTimeZone.UTC, data.toMap)))
+    )
+
+  private def getServiceMetricsData(): Future[Vector[(String, BigDecimal)]] = {
+    val memoryMBean  = java.lang.management.ManagementFactory.getMemoryMXBean
+    val     gcMBeans = java.lang.management.ManagementFactory.getGarbageCollectorMXBeans.asScala
+
+    val statics = Vector[(String, BigDecimal)](
+      "heap_used_bytes" -> memoryMBean.getHeapMemoryUsage.getUsed,
+      "heap_size_bytes" -> memoryMBean.getHeapMemoryUsage.getMax,
+            "gc_millis" -> gcMBeans.iterator.map(_.getCollectionTime).sum,
+         "thread_count" -> Thread.activeCount()
+    )
+
+    metricsStore.getCountersSnapshot() map (counters => statics ++ counters.mapValues(BigDecimal(_)))
   }
 
-  private def unscheduleHealthChecks() {
-    scheduledTests foreach (_.cancel())
-    scheduledTests = Iterable.empty
-  }
-
-  def getServiceMetrics     = Action(Ok("TODO"))
-  def getServiceTwoMetrics  = Action(Ok("TODO"))
-
-
-
-
-
-  def getServiceConfig      = Action(Ok("TODO"))
+  def getServiceConfig = TODO
 }

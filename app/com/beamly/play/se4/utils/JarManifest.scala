@@ -1,4 +1,5 @@
 package com.beamly.play.se4
+package utils
 
 import scala.collection.JavaConverters._
 import java.net.JarURLConnection

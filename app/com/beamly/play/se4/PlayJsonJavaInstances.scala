@@ -7,7 +7,7 @@ import java.net.{ URI, URL }
 
 trait PlayJsonJavaInstances {
   implicit val urlFormat = new Format[URI] {
-    def writes(uri: URI): JsValue = Json toJson uri.toString
+    def writes(uri: URI): JsValue = JsString(uri.toString)
 
     def reads(json: JsValue): JsResult[URI] =
       json match {

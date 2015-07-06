@@ -9,11 +9,7 @@ scalacOptions ++= Seq("-encoding", "utf8")
 scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-Xlint")
 scalacOptions  += "-language:postfixOps"
 
-libraryDependencies += "com.lihaoyi" % "ammonite-repl" % "0.3.2" % "test" cross CrossVersion.full
-
 enablePlugins(PlayScala)
-
-initialCommands in (Test, console) := """ammonite.repl.Repl.run("")"""
 
 routesGenerator := InjectedRoutesGenerator
 

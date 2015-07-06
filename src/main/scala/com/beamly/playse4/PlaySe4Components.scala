@@ -5,6 +5,7 @@ import com.beamly.playse4.controllers.Se4Controller
 import com.beamly.playse4.healthchecks.HealthCheck
 import com.beamly.playse4.metrics.MetricsStore
 import play.api.Configuration
+import play.api.http.HttpErrorHandler
 import play.api.inject.ApplicationLifecycle
 
 trait PlaySe4Components {
@@ -13,6 +14,7 @@ trait PlaySe4Components {
   def healthchecks: Iterable[HealthCheck]
 
   def configuration: Configuration
+  def httpErrorHandler: HttpErrorHandler
   implicit def applicationLifecycle: ApplicationLifecycle
   implicit def actorSystem: ActorSystem
 
@@ -20,4 +22,5 @@ trait PlaySe4Components {
 
   lazy val metricsStore = new MetricsStore()
   lazy val se4Controller = new Se4Controller(config, aServiceClass, runbookUrl, healthchecks, metricsStore)
+  lazy val se4Routes = new se4.Routes(httpErrorHandler, se4Controller, "service")
 }

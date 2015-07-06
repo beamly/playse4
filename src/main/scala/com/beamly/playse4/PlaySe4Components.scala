@@ -1,9 +1,9 @@
-package com.beamly.play.se4
+package com.beamly.playse4
 
 import akka.actor.ActorSystem
-import com.beamly.play.se4.controllers.Se4Controller
-import com.beamly.play.se4.healthchecks.HealthCheck
-import com.beamly.play.se4.metrics.MetricsStore
+import com.beamly.playse4.controllers.Se4Controller
+import com.beamly.playse4.healthchecks.HealthCheck
+import com.beamly.playse4.metrics.MetricsStore
 import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
 

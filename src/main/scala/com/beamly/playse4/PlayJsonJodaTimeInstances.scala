@@ -1,4 +1,4 @@
-package com.beamly.play.se4
+package com.beamly.playse4
 
 import org.joda.time.{ Duration => JodaDuration }
 import play.api.libs.json._

@@ -1,11 +1,11 @@
-package com.beamly.play.se4
+package com.beamly.playse4
 package controllers
 
 import akka.actor.{ ActorSystem, Cancellable }
-import com.beamly.play.se4.healthchecks.{ HealthCheck, HealthcheckResponse, TestPassed }
-import com.beamly.play.se4.metrics.{ CounterV1, MetricsResponseV1, MetricsResponseV2, MetricsStore }
-import com.beamly.play.se4.status.Se4StatusResponse
-import com.beamly.play.se4.utils.JarManifest
+import com.beamly.playse4.healthchecks.{ HealthCheck, HealthcheckResponse, TestPassed }
+import com.beamly.playse4.metrics.{ CounterV1, MetricsResponseV1, MetricsResponseV2, MetricsStore }
+import com.beamly.playse4.status.Se4StatusResponse
+import com.beamly.playse4.utils.JarManifest
 import com.typesafe.config.{ Config, ConfigRenderOptions }
 import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration }
 import play.Logger

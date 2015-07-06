@@ -1,6 +1,6 @@
-package com.beamly.play.se4
+package com.beamly.playse4
 
-import com.beamly.play.se4.controllers.Se4Controller
+import com.beamly.playse4.controllers.Se4Controller
 import play.api.ApplicationLoader.Context
 import play.api.{ ApplicationLoader, BuiltInComponentsFromContext }
 import router.Routes

@@ -1,4 +1,4 @@
-package com.beamly.play.se4
+package com.beamly.playse4
 
 trait PlayJsonAllInstances
   extends PlayJsonJavaInstances

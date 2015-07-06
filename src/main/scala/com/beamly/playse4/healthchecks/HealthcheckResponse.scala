@@ -1,4 +1,4 @@
-package com.beamly.play.se4
+package com.beamly.playse4
 package healthchecks
 
 import org.joda.time.{ DateTime, DateTimeZone }

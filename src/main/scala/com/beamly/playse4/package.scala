@@ -1,4 +1,4 @@
-package com.beamly.play
+package com.beamly
 
 import akka.actor.ActorSystem
 
@@ -7,7 +7,7 @@ import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.{ Failure, Success, Try }
 import scala.{ PartialFunction => ?=> }
 
-package object se4 extends PlayJsonAllInstances {
+package object playse4 extends PlayJsonAllInstances {
   implicit final class FutureTimeoutW[A](val future: Future[A]) extends AnyVal {
     def timeout[B >: A](duration: FiniteDuration, onTimeout: => Future[B])
       (implicit actorSystem: ActorSystem, ec: ExecutionContext)

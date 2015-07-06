@@ -1,8 +1,8 @@
-package com.beamly.play.se4
+package com.beamly.playse4
 package healthchecks
 
 import akka.actor.ActorSystem
-import com.beamly.play.se4.utils.AtomicFuture
+import com.beamly.playse4.utils.AtomicFuture
 import org.joda.time.{ DateTime, DateTimeZone }
 
 import scala.concurrent.Future

@@ -1,4 +1,4 @@
-package com.beamly.play.se4
+package com.beamly.playse4
 package metrics
 
 import org.joda.time.DateTime

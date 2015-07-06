@@ -12,11 +12,12 @@ trait PlaySe4Components {
   def runbookUrl: RunbookUrl
   def healthchecks: Iterable[HealthCheck]
 
+  def configuration: Configuration
   implicit def applicationLifecycle: ApplicationLifecycle
   implicit def actorSystem: ActorSystem
-  def configuration: Configuration
+
+  lazy val config = configuration.underlying
 
   lazy val metricsStore = new MetricsStore()
-  lazy val se4Controller =
-    new Se4Controller(configuration.underlying, aServiceClass, runbookUrl, healthchecks, metricsStore)
+  lazy val se4Controller = new Se4Controller(config, aServiceClass, runbookUrl, healthchecks, metricsStore)
 }

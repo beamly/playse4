@@ -1,22 +1,38 @@
-lazy val `play-se4-scratch` = project in file(".")
+lazy val playse4 = project in file(".")
 
-   name := "play-se4-scratch"
-version := "1.0-SNAPSHOT"
+organization := "com.beamly"
+        name := "playse4"
+     version := "0.1.0-SNAPSHOT"
 
-scalaVersion := "2.11.7"
+enablePlugins(PlayScala)
+disablePlugins(PlayLayoutPlugin)
+
+      scalaVersion := "2.11.7"
+crossScalaVersions := Seq(scalaVersion.value)
 
 scalacOptions ++= Seq("-encoding", "utf8")
 scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-Xlint")
+scalacOptions  += "-language:higherKinds"
+scalacOptions  += "-language:implicitConversions"
 scalacOptions  += "-language:postfixOps"
+scalacOptions  += "-Yinline-warnings"
+scalacOptions  += "-Xfuture"
+scalacOptions  += "-Yinline-warnings"
+scalacOptions  += "-Yno-adapted-args"
+scalacOptions  += "-Ywarn-dead-code"
+scalacOptions  += "-Ywarn-numeric-widen"
+scalacOptions  += "-Ywarn-value-discard"
 
-enablePlugins(PlayScala)
+maxErrors := 5
+triggeredMessage := Watched.clearWhenTriggered
 
 routesGenerator := InjectedRoutesGenerator
 
-TaskKey[Unit]("stop") := {
-  val pidFile = (stagingDirectory in Universal).value / "RUNNING_PID"
-  if (!pidFile.exists) sys error "App not started!"
-  val pid = IO read pidFile
-  s"kill $pid".!
-  println(s"Stopped application with process ID $pid")
-}
+parallelExecution in Test := true
+fork in Test := false
+
+fork in run := true
+cancelable in Global := true
+
+watchSources ++= (baseDirectory.value * "*.sbt").get
+watchSources ++= (baseDirectory.value / "project" * "*.scala").get

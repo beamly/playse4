@@ -6,6 +6,7 @@ import com.beamly.play.se4.healthchecks.{ HealthCheck, HealthcheckResponse, Test
 import com.beamly.play.se4.metrics.{ CounterV1, MetricsResponseV1, MetricsResponseV2, MetricsStore }
 import com.beamly.play.se4.status.Se4StatusResponse
 import com.beamly.play.se4.utils.JarManifest
+import com.typesafe.config.{ Config, ConfigRenderOptions }
 import org.joda.time.{ DateTime, DateTimeZone, Duration => JodaDuration }
 import play.Logger
 import play.api.inject.ApplicationLifecycle
@@ -18,6 +19,7 @@ import scala.concurrent.duration._
 
 // TODO: Restrict to return only json
 class Se4Controller(
+  config        : Config,
   aServiceClass : Class[_],
   runbookUrl    : RunbookUrl,
   healthchecks  : Iterable[HealthCheck],
@@ -141,5 +143,5 @@ class Se4Controller(
     metricsStore.getCountersSnapshot() map (counters => statics ++ counters.mapValues(BigDecimal(_)))
   }
 
-  def getServiceConfig = TODO
+  def getServiceConfig = Action(Ok(Json.parse(config.root.render(ConfigRenderOptions.concise))))
 }

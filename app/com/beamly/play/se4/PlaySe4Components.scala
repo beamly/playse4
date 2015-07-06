@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import com.beamly.play.se4.controllers.Se4Controller
 import com.beamly.play.se4.healthchecks.HealthCheck
 import com.beamly.play.se4.metrics.MetricsStore
+import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
 
 trait PlaySe4Components {
@@ -13,7 +14,9 @@ trait PlaySe4Components {
 
   implicit def applicationLifecycle: ApplicationLifecycle
   implicit def actorSystem: ActorSystem
+  def configuration: Configuration
 
   lazy val metricsStore = new MetricsStore()
-  lazy val se4Controller = new Se4Controller(aServiceClass, runbookUrl, healthchecks, metricsStore)
+  lazy val se4Controller =
+    new Se4Controller(configuration.underlying, aServiceClass, runbookUrl, healthchecks, metricsStore)
 }

@@ -15,5 +15,5 @@ trait PlaySe4Components {
   implicit def actorSystem: ActorSystem
 
   lazy val metricsStore = new MetricsStore()
-  lazy val se4Controller = new Se4Controller(aServiceClass, runbookUrl, metricsStore, healthchecks)
+  lazy val se4Controller = new Se4Controller(aServiceClass, runbookUrl, healthchecks, metricsStore)
 }

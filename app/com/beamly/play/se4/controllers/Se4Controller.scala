@@ -20,8 +20,8 @@ import scala.concurrent.duration._
 class Se4Controller(
   aServiceClass : Class[_],
   runbookUrl    : RunbookUrl,
-  metricsStore  : MetricsStore,
-  healthchecks: Iterable[HealthCheck]
+  healthchecks  : Iterable[HealthCheck],
+  metricsStore  : MetricsStore
 )(implicit actorSystem: ActorSystem, applicationLifecycle: ApplicationLifecycle) extends Controller {
 
   import actorSystem.dispatcher

@@ -33,11 +33,11 @@ class Se4Controller(
 
   private var scheduledTests = Iterable.empty[Cancellable]
 
-  private def scheduleHealthChecks() {
+  private def scheduleHealthChecks(): Unit = {
     scheduledTests = healthchecks map { healthCheck =>
       actorSystem.scheduler.schedule(Duration.Zero, healthCheck.testInterval) {
         healthCheck.invokeTest()
-        healthCheck.latestResult map { result =>
+        healthCheck.latestResult foreach { result =>
           import result._
           if (status == TestPassed)
             Logger debug s"HealthCheck [$name] $status"

@@ -17,7 +17,7 @@ object HealthcheckResponse {
   : HealthcheckResponse = {
     val testResultResponses =
       testResults map (r =>
-        TestResultResponse(r.name, r.timestamp, r.duration.toMillis, format(r.status), desc(r.status))
+        TestResultResponse(r.name, r.timestamp, r.duration.toMillis.toDouble, format(r.status), desc(r.status))
       )
     HealthcheckResponse(DateTime now DateTimeZone.UTC, reportDuration, testResultResponses)
   }

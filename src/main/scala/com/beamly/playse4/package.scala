@@ -18,6 +18,7 @@ package object playse4 extends PlayJsonAllInstances {
         val promise = Promise[B]()
         val timeout = actorSystem.scheduler.scheduleOnce(duration) {
           if (!promise.isCompleted) promise tryCompleteWith onTimeout
+          ()
         }
         promise tryCompleteWith future
         promise.future onComplete (_ => timeout.cancel())

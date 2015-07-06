@@ -3,7 +3,7 @@ lazy val `play-se4-scratch` = project in file(".")
    name := "play-se4-scratch"
 version := "1.0-SNAPSHOT"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 scalacOptions ++= Seq("-encoding", "utf8")
 scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-Xlint")

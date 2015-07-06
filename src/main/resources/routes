@@ -1,6 +1,0 @@
-GET        /service/status                 com.beamly.playse4.controllers.Se4Controller.getServiceStatus
-GET        /service/healthcheck/gtg        com.beamly.playse4.controllers.Se4Controller.getServiceHealthcheckGtg
-GET        /service/healthcheck            com.beamly.playse4.controllers.Se4Controller.getServiceHealthcheck
-GET        /service/metrics                com.beamly.playse4.controllers.Se4Controller.getServiceMetricsV1
-GET        /service/2/metrics              com.beamly.playse4.controllers.Se4Controller.getServiceMetricsV2
-GET        /service/config                 com.beamly.playse4.controllers.Se4Controller.getServiceConfig

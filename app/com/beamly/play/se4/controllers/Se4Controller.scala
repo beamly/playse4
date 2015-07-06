@@ -40,7 +40,7 @@ class Se4Controller(
         healthCheck.latestResult map { result =>
           import result._
           if (status == TestPassed)
-            Logger debug s"HealthCheck [$name}}] $status"
+            Logger debug s"HealthCheck [$name] $status"
           else
             Logger info s"HealthCheck [$name] $status"
         }

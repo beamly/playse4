@@ -4,6 +4,7 @@ organization := "com.beamly"
         name := "playse4"
     licenses := Seq(("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0")))
  description := "Implementation of SE4 in Play"
+    homepage := Some(url("https://github.com/beamly/playse4"))
 
 enablePlugins(PlayScala)
 disablePlugins(PlayLayoutPlugin)

@@ -38,6 +38,22 @@ cancelable in Global := true
 bintrayOrganization := Some("beamly")
 GithubRelease.repo := s"beamly/${name.value}"
 
+pomExtra := pomExtra.value ++ {
+    <developers>
+        <developer>
+            <id>dwijnand</id>
+            <name>Dale Wijnand</name>
+            <email>dale wijnand gmail com</email>
+            <url>dwijnand.com</url>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:github.com/beamly/playse4.git</connection>
+        <developerConnection>scm:git:git@github.com:beamly/playse4.git</developerConnection>
+        <url>https://github.com/beamly/playse4</url>
+    </scm>
+}
+
 val createGithubRelease =
   Def setting
     ReleaseStep(

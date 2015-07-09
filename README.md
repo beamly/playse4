@@ -17,7 +17,7 @@ Add this to your routes:
 
     ->  /service se4.Routes
 
-Mixing `com.beamly.playse4.PlaySe4Components` into your components cake and configure the required dependencies
+Mix `com.beamly.playse4.PlaySe4Components` into your components cake and configure the required dependencies
 and routes.
 
 Here's a minimal example:

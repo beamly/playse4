@@ -7,6 +7,33 @@
 
 `playse4` is an implementation of [SE4][] in [Play][].
 
+## Setup
+
+Add this to your sbt build (`build.sbt`):
+
+    libraryDependencies += "com.beamly" %% "playse4" % "0.1.0"
+
+Add this to your routes:
+
+    ->  /service se4.Routes
+
+Mixing `com.beamly.playse4.PlaySe4Components` into your components cake and configure the required dependencies
+and routes.
+
+Here's a minimal example:
+
+    class AppComponents(context: Context)
+      extends play.api.BuiltInComponentsFromContext(context)
+         with com.beamly.playse4.PlaySe4Components {
+      Logger configure context.environment
+
+      val aServiceClass = getClass
+      val runbookUrl    = new com.beamly.playse4.RunbookUrl(new URI("https://acme.com/runbook/myapp"))
+      val healthchecks  = Nil // TODO: Write at least one healthcheck
+
+      lazy val router = new Routes(httpErrorHandler, se4Routes)
+    }
+
 ## Licence
 
 Copyright 2015 Dale Wijnand

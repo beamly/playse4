@@ -37,7 +37,6 @@ fork in run := true
 cancelable in Global := true
 
 bintrayOrganization := Some("beamly")
-GithubRelease.repo := s"beamly/${name.value}"
 
 pomExtra := pomExtra.value ++ {
     <developers>
@@ -56,32 +55,6 @@ pomExtra := pomExtra.value ++ {
 }
 
 releaseCrossBuild := true
-
-val createGithubRelease =
-  Def setting
-    ReleaseStep(
-      check  = releaseStepTaskAggregated(checkGithubCredentials in thisProjectRef.value),
-      action = releaseStepTaskAggregated(       releaseOnGithub in thisProjectRef.value)
-    )
-
-releaseProcess := {
-  import ReleaseTransformations._
-
-  Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    commitReleaseVersion,
-    tagRelease,
-    publishArtifacts,
-    setNextVersion,
-    commitNextVersion,
-    pushChanges,
-    createGithubRelease.value
-  )
-}
 
 watchSources ++= (baseDirectory.value * "*.sbt").get
 watchSources ++= (baseDirectory.value / "project" * "*.scala").get

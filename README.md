@@ -34,6 +34,11 @@ Here's a minimal example:
       lazy val router = new Routes(httpErrorHandler, se4Routes)
     }
 
+## Dependencies
+
+* Scala 2.11.x or 2.10.x
+* Play 2.4.x
+
 ## Licence
 
 Copyright 2015 Dale Wijnand

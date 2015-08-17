@@ -55,6 +55,8 @@ pomExtra := pomExtra.value ++ {
     </scm>
 }
 
+releaseCrossBuild := true
+
 val createGithubRelease =
   Def setting
     ReleaseStep(

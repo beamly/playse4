@@ -55,7 +55,6 @@ pomExtra := pomExtra.value ++ {
 }
 
 releaseCrossBuild := true
-GithubRelease.repo := s"beamly/${name.value}"
 
 watchSources ++= (baseDirectory.value * "*.sbt").get
 watchSources ++= (baseDirectory.value / "project" * "*.scala").get

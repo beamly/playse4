@@ -11,7 +11,7 @@
 
 Add this to your sbt build (`build.sbt`):
 
-    libraryDependencies += "com.beamly" %% "playse4" % "0.2.0"
+    libraryDependencies += "com.beamly" %% "playse4" % "0.3.0"
 
 Add this to your routes:
 
@@ -36,8 +36,8 @@ Here's a minimal example:
 
 ## Dependencies
 
-* Scala 2.11.x or 2.10.x
-* Play 2.4.x
+* Scala 2.11.x
+* Play 2.5.x
 
 ## Licence
 

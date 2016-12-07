@@ -36,8 +36,8 @@ Here's a minimal example:
 
 ## Dependencies
 
-* Scala 2.11.x or 2.10.x
-* Play 2.4.x
+* Scala 2.11.x
+* Play 2.5.x
 
 ## Licence
 

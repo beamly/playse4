@@ -9,7 +9,7 @@ organization := "com.beamly"
 enablePlugins(PlayScala)
 disablePlugins(PlayLayoutPlugin)
 
-      scalaVersion := "2.11.7"
+      scalaVersion := "2.11.8"
 crossScalaVersions := Seq(scalaVersion.value, "2.10.5")
 
 scalacOptions ++= Seq("-encoding", "utf8")

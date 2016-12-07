@@ -11,7 +11,7 @@
 
 Add this to your sbt build (`build.sbt`):
 
-    libraryDependencies += "com.beamly" %% "playse4" % "0.2.0"
+    libraryDependencies += "com.beamly" %% "playse4" % "0.3.0"
 
 Add this to your routes:
 
